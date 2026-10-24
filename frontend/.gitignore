@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+*/node_modules/
+
+# Frontend builds & outputs
+frontend/out/
+frontend/dist/
+frontend/build/
+
+# IDE / Editor
+.vscode/
+*/.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs & environment
+*.log
+.env
+.env.local
+
+# Editor settings
+.vscode/
+
+# Build artifacts
+build/
+
+out/
