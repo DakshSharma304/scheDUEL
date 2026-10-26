@@ -43,9 +43,9 @@ export function parseTeacherCSV(file) { // TODO: figure out the 2 problems (min-
                 try {
                     const parsedArray = results.data.map((row) => {
                         const id = String(row.id ?? "").trim()
-                        const coursesTeaching = parseList(row["courses-teaching"] || row.courses || "") // Supports either "courses-teaching" or "courses"
-                        const periodsAvailable = parseList(row["periods-available"] || row.periods || "") // Same thing; supports either
-                        const rawMaxTeach = String(row["max-teach"] ?? "").trim()
+                        const coursesTeaching = parseList(row["courses-teaching"] || row.courses_teaching || row.courses || "") // Supports hyphenated, snake_case, or short names
+                        const periodsAvailable = parseList(row["periods-available"] || row.periods_available || row.periods || "") // Supports hyphenated, snake_case, or short names
+                        const rawMaxTeach = String(row["max-teach"] ?? row.max_teach ?? "").trim()
 
                         const maxTeach = (rawMaxTeach !== "" ? parseInt(rawMaxTeach, 10) : periodsAvailable.length) // If it's empty (they don't care), use the amt of periods
 
@@ -100,11 +100,11 @@ export function parseCourseCSV(file) {
                 try {
                     const parsedArray = results.data.map((row) => {
                         const name = String(row.name ?? "").trim()
-                        const duration = parseInt(row.duration || "2", 10) // Course length is in semesters (2 = full year)
-                        const minClass = parseInt(row["min-class"] || row.min, 10) // Min students required to avoid class cancellation
-                        const maxClass = parseInt(row["max-class"] || row.max, 10) // Max capacity for a class
-                        const prefSize = parseInt(row["pref-size"] || row.pref, 10) // Target size
-                        const maxClasses = parseInt(row["maximum-classes"] || row["max-classes"], 10)
+                        const duration = parseInt(row.duration || row.length || "2", 10) // Course length is in semesters (2 = full year)
+                        const minClass = parseInt(row["min-class"] || row.min_size || row.min, 10) // Min students required to avoid class cancellation
+                        const maxClass = parseInt(row["max-class"] || row.max_size || row.max, 10) // Max capacity for a class
+                        const prefSize = parseInt(row["pref-size"] || row.pref_size || row.pref, 10) // Target size
+                        const maxClasses = parseInt(row["maximum-classes"] || row.max_classes || row["max-classes"], 10)
 
                         return {
                             name,
@@ -166,7 +166,7 @@ export function parseStudentCSV(file) {
                         const name = String(row.name ?? "").trim() || `Student ${id}` // If name is found, use it; otherwise fall back to "Student 97591" for ex
                         if (id) idToNameMap[id] = name
 
-                        const requiredCourses = parseList(row["required-courses"] || row.required || "")
+                        const requiredCourses = parseList(row["required-courses"] || row.required_courses || row.required || "")
                         const electives = parseList(row.electives || "") // Preserves it in the same order
 
                         return {
