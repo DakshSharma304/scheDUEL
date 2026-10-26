@@ -30,8 +30,8 @@ export default function TeachersTable({ data = [] }) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data.map((teacher, idx) => (
-            <TableRow key={teacher.id || idx}>
+          {data.map((teacher, ID) => (
+            <TableRow key={teacher.id || ID}>
                 <TableCell className="teacher-id">{teacher.id}</TableCell>
                 <TableCell>
                   <div className="badge-group">

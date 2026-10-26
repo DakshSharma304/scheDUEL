@@ -35,7 +35,7 @@ export default function StudentsTable({ data = [] }) {
             const requiredList = Array.isArray(student.required)
               ? student.required
               : student.required
-                ? student.required.split(";").map((s) => s.trim()).filter(Boolean)
+                ? student.required.split(";").map((s) => s.trim()).filter(Boolean) // Line provided by Gemini 3.5
                 : []
             const electivesList = Array.isArray(student.electives)
               ? student.electives
