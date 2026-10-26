@@ -108,19 +108,64 @@ def generate_schedule(schedule_request: ScheduleRequest):
 
     #work from here for the api ver
 
-    if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE):
+    if status not in (cp_model.OPTIMAL, cp_model.FEASIBLE): # A failed solve
         return {
             "status": solver.status_name(status),
-            "issues": ["41"]
+            "teachers-schedules": {},
+            "students-schedules": {},
+            "issues": [],
         }
+
+    # Allocate response lists (and then we'll copy the data into them)
+    teachers_schedules = {
+        teacher.id: {
+            "semester1": [""] * schedule_request.periods,
+            "semester2": [""] * schedule_request.periods,
+        }
+        for teacher in schedule_request.teachers
+    }
+    students_schedules = {
+        student.id: {
+            "semester1": [""] * schedule_request.periods,
+            "semester2": [""] * schedule_request.periods,
+        }
+        for student in schedule_request.students
+    }
+    
+    # Keep track of whether there's an Error 41 or not; this tracks students who cannot fill every period with a requested course
+    has_unwanted_studyhall = False # In other words, error code 41
+    for student in schedule_request.students:
+        total_requested_count = len(student.required_courses) + len(student.electives)
+        if total_requested_count < schedule_request.periods:
+            has_unwanted_studyhall = True
+            break 
+        has_fallback = any(
+            solver.value(variable)
+            for (student_id, period, semester), variable in fallback_hall.items()
+            if student_id == student.id
+        )
+        if has_fallback:
+            has_unwanted_studyhall = True 
+            break
+
+    for (course_name, i, teacher_id, period, semester), variable in teacher_busy.items():
+        if solver.value(variable):
+            teachers_schedules[teacher_id][f"semester{semester}"][period - 1] = course_name
 
     for (student_id, course_name, i, teacher_id, period, semester), variable in student_busy.items():
         if solver.value(variable):
-            print(student_id, course_name, period, semester)
+            students_schedules[student_id][f"semester{semester}"][period - 1] = course_name
 
-    for (student_id,  period, semester), variable in fallback_hall.items():
+    for (student_id, period, semester), variable in fallback_hall.items():
         if solver.value(variable):
-            print(student_id, " Fallback Study Hall ", period, semester)
+            students_schedules[student_id][f"semester{semester}"][period - 1] = "Study Hall"
+
+    return {  # Return the schedule even when error code 41 is being sent
+        "status": solver.status_name(status),  # OPTIMAL or FEASIBLE
+        "teachers-schedules": teachers_schedules,
+        "students-schedules": students_schedules,
+        "issues": [41] if has_unwanted_studyhall else [],
+    }
 
 def teacher_quals(schedule_request: ScheduleRequest):
     qualified = {}
